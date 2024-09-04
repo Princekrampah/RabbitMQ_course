@@ -1,31 +1,29 @@
-import pika
-import sys
+import pika  # Import the Pika library to interact with RabbitMQ.
+import sys   # Import sys to handle command-line arguments.
 
+# Establish a connection to the RabbitMQ server running on the local machine.
 connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host='localhost'))
-channel = connection.channel()
+    pika.ConnectionParameters(host='localhost')
+)
+channel = connection.channel()  # Create a channel for communication with RabbitMQ.
 
-# declare a fanout exchange
+# Declare a fanout exchange named 'logs'. A fanout exchange broadcasts messages to all queues that are bound to it.
 channel.exchange_declare(exchange='logs', exchange_type='fanout')
 
-
+# Concatenate all command-line arguments into a single string, which will be the message to send.
 message = ' '.join(sys.argv[1:])
 
+# Check if the message is empty. If no message is provided, print an error message and exit the program.
 if message == "":
     print("No message provided")
     sys.exit(1)
 
-# The exchange parameter is the name of the exchange. The empty
-# string denotes the default or nameless exchange: messages are
-# routed to the queue with the name specified by routing_key, if
-# it exists.
+# Publish the message to the 'logs' exchange. Since this is a fanout exchange, the routing_key is ignored.
+# Hence no need to specify a routing_key.
 channel.basic_publish(exchange='logs', routing_key='', body=message)
-# The producer program, which emits log messages, doesn't look much
-# different from the previous tutorial. The most important change is
-# that we now want to publish messages to our logs exchange instead
-# of the nameless one. We need to supply a routing_key when sending,
-# but its value is ignored for fanout exchanges.
 
+# Print a confirmation that the message has been sent.
 print(f" [x] Sent {message}")
 
+# Close the connection to RabbitMQ after the message is sent.
 connection.close()
